@@ -4,7 +4,7 @@
 
 ### Description
 
-Single page application that displays information on your favorite club. Live standings, scores, upcoming matches, injury and transfer news. A pared-down version of Bleacher Report. I would like there to be an option to sign in and create chat groups with friends.
+Application that displays information on your favorite club. Live standings, scores, upcoming matches, injury and transfer news. A pared-down version of Bleacher Report. I would like there to be an option to sign in and create chat groups with friends.
 
 ### APIs
 
