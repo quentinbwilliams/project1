@@ -1,3 +1,8 @@
 __pycache__
 venv
 secrets.py
+
+curl --request GET \
+--url https://api-football-v1.p.rapidapi.com/v2/leagues \
+--header 'x-rapidapi-host: v3.football.api-sports.io' \
+--header 'x-rapidapi-key: a60195766824a7c31e63ccf280c0d3a30ef7128d5759747a39cf7fc771f89b59'
