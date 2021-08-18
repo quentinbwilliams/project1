@@ -36,7 +36,9 @@ class User(db.Model):
     
     password = db.Column(db.Text, nullable=False)
     
-    email = 
+    email = db.Column(db.Text, nullable=False, unique=True)
+
+    first_name = db.Column(db.Text, nullable=False)
     
     @classmethod
     def register(cls, username, password):
