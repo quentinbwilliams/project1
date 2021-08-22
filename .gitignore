@@ -1,6 +1,7 @@
 __pycache__
 venv
 secrets.py
+scrap.py
 
 curl --request GET \
 --url https://api-football-v1.p.rapidapi.com/v2/leagues \

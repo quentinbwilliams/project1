@@ -1,17 +1,156 @@
+from flask.globals import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
+from secrets import API_FOOTBALL_KEY
+import requests
 
 db = SQLAlchemy()
 
 bcrypt = Bcrypt()
 
-
 def connect_db(app):
     """Connect to database."""
 
     db.app = app
+    
     db.init_app(app)
 
+
+##################
+## LEAGUE MODEL ##
+##################
+    
+class League(db.Model):
+    """
+    Model Class for leagues.
+    Everything inherits from league
+    """
+    __tablename__="leagues"
+    api_id = db.Column(db.Integer, primary_key=True, unique=True)
+    name = db.Column(db.Text, unique=True, nullable=False)
+    
+    @staticmethod
+    def get_standings(self):
+        
+        url = "https://api-football-v1.p.rapidapi.com/v3/standings"
+
+        querystring = {"season":"2021","league":f"{self.api_id}"}
+
+        headers = {
+            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
+            }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        
+        resjson = response.json()
+    
+        standings = resjson['response']
+    
+        return standings
+    
+    @staticmethod
+    def get_upcoming_fixtures(self):
+        """
+        Returns the next 20 competition fixtures 
+        """
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        
+        querystring = {"next":"20","league":f"{self.api_id}"}
+
+        headers = {
+            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
+            }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        
+        resjson = response.json()
+    
+        fixtures = resjson['response']
+    
+        return fixtures
+    
+    @staticmethod
+    def get_live_fixtures(self):
+        
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+
+        querystring = {"live":"all","league":"39"}
+
+        headers = {
+            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+            'x-rapidapi-key':f"{API_FOOTBALL_KEY}"
+            }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        
+        resjson = response.json()
+
+        live_fixtures = resjson
+        
+        return live_fixtures
+        
+    @staticmethod
+    def get_current_round_fixtures(self):
+    
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds"
+
+        querystring = {"league":f"{self.api_id}","season":"2020",   "current":"true"}
+
+        headers = {
+        'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+        'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
+        }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        
+        resjson = response.json()
+    
+        current_round = resjson['response']
+    
+        return current_round
+    
+    @staticmethod
+    def get_scorers(self):
+        
+        url = "https://api-football-v1.p.rapidapi.com/v3/players/topscorers"
+
+        querystring = {"season":"2021","league":f"{self.api_id}"}
+
+        headers = {
+            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
+            }
+
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        
+        resjson = response.json()
+    
+        scorers = resjson['response']
+    
+        return scorers
+
+################    
+## TEAM MODEL ##
+################
+
+class Team(db.Model):
+    """
+    Contains info on teams and methods to view dynamic info
+    """
+    __tablename__="teams"
+    api_id = db.Column(db.Integer, primary_key=True, unique=True)
+    name = db.Column(db.Text, unique=True, nullable=False)
+    players = db.Column(db.Text, unique=False, nullable=True)
+    coaches = db.Column(db.Text, unique=False, nullable=True)
+
+
+################
+## USER MODEL ##
+################
+    
+    
 class User(db.Model):
     """
     User model should contain:
@@ -41,36 +180,86 @@ class User(db.Model):
     first_name = db.Column(db.Text, nullable=False)
     
     @classmethod
-    def register(cls, username, password):
+    def register(cls, username, password, email, first_name):
         """Register user with hashed password and return user"""
         
-        # hash password with bcrpyt
-        hashed = bcrypt.generate_password_hash(password)
-        
-        # turn bytestring into utf8 string
-        hashed_utf8 = hashed.decode("utf8")
-        
-        # return instance of user w/ username and hashed password
-        return cls(username=username, password=hashed_utf8)
+        # check if username exists in database
+        username_exists = User.query.filter_by(username=username).first()
     
+        # check if email exists in database
+        email_exists = User.query.filter_by(email=email).first()
+            
+        if not username_exists and not email_exists:
+
+            # hash password with bcrpyt
+            hashed = bcrypt.generate_password_hash(password)
+        
+            # turn bytestring into utf8 string
+            hashed_utf8 = hashed.decode("utf8")
+            
+            # return instance of user w/ username and hashed password            
+            return cls(username=username, password=hashed_utf8, email=email, first_name=first_name)
+        
+        elif username_exists:
+
+            # Should return F but let them know why
+            return 'username already exists'
+        
+        elif email_exists:
+
+            # Should return F but let them know why
+            return 'that email is already registered with an account'
+        
     @classmethod
-    def authenticate(cls, username, password):
+    def authenticate(cls, username, password, email):
         """ Validate that user exists & password is correct. If valid, return user. Else, return false """
         
         # check if username exists in database
-        username_auth = User.query.filter_by(username=username).first()
+        username_exists = User.query.filter_by(username=username).first()
+        # check if email exists in database
+        email_exists = User.query.filter_by(email=email).first()
         
         # if the username is in the table AND bcrypt returns the same hash for the password stored in the user table and password from form, return authorized user instance
-        if username_auth and bcrypt.check_password_hash(username_auth.password, password):
+        if username_exists and email_exists and bcrypt.check_password_hash(username_exists.password, password):
             # return user instance
-            return username_auth
+            return username_exists
         else:
             # if username is not in db or password does not match, deny
-            return False
+            return False    
+  
+# class Team(db.Model):
+    # """
     
+    # """
     
+    # __tabelname__="teams"
     
-class Team(db.Model):
-    """
+    # id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     
-    """
+    # name = db.Column(db.Text, unique=True, nullable=False)
+    
+
+# class Player(db.Model):
+#     """
+    
+#     """
+    
+#     __tablename__="players"
+    
+#     team = db.relationship('Team', backref='players')
+    
+# class Match(db.Model):
+#     """
+    
+#     """
+    
+#     __tablename__ = "matches"
+    
+#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    
+#     home_team = db.Column(db.Text, nullable=False, unique=True)
+    
+#     away_team = db.Column(db.Text, nullable=False, unique=True)
+    
+#     score = db.Column(db.Text)
+    
