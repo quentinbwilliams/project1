@@ -25,9 +25,9 @@ def extract_team_names_ids():
 
 def seed_teams_table():
     """  """
-    team_names_ids = extract_team_names_ids()
+    team_names_ids = PremierLeague.get_team_names_ids(PremierLeague)
     for name, id in team_names_ids:
-        name = Team(api_id=id, name=name)
+        name = Team(api_id=id, name=name, league_id=PremierLeague.api_id)
         db.session.add(name)
     db.session.commit()
     
