@@ -2,6 +2,7 @@ from flask.globals import current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from secrets import API_FOOTBALL_KEY
+from season import season
 import requests
 
 db = SQLAlchemy()
@@ -10,9 +11,7 @@ bcrypt = Bcrypt()
 
 def connect_db(app):
     """Connect to database."""
-
     db.app = app
-    
     db.init_app(app)
 
 
@@ -28,25 +27,18 @@ class League(db.Model):
     __tablename__="leagues"
     api_id = db.Column(db.Integer, primary_key=True, unique=True)
     name = db.Column(db.Text, unique=True, nullable=False)
-    
     @staticmethod
     def get_standings(self):
-        
+        """  """
         url = "https://api-football-v1.p.rapidapi.com/v3/standings"
-
-        querystring = {"season":"2021","league":f"{self.api_id}"}
-
+        querystring = {"season":f"{season}","league":f"{self.api_id}"}
         headers = {
             'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
             'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
             }
-
         response = requests.request("GET", url, headers=headers, params=querystring)
-        
         resjson = response.json()
-    
         standings = resjson['response']
-    
         return standings
     
     @staticmethod
@@ -55,80 +47,53 @@ class League(db.Model):
         Returns the next 20 competition fixtures 
         """
         url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
-        
         querystring = {"next":"20","league":f"{self.api_id}"}
-
         headers = {
             'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
             'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
             }
-
         response = requests.request("GET", url, headers=headers, params=querystring)
-        
         resjson = response.json()
-    
         fixtures = resjson['response']
-    
         return fixtures
     
     @staticmethod
     def get_live_fixtures(self):
-        
         url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
-
-        querystring = {"live":"all","league":"39"}
-
+        querystring = {"live":"all","league":f"{self.api_id}"}
         headers = {
             'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
             'x-rapidapi-key':f"{API_FOOTBALL_KEY}"
             }
-
         response = requests.request("GET", url, headers=headers, params=querystring)
-        
         resjson = response.json()
-
         live_fixtures = resjson
-        
         return live_fixtures
         
     @staticmethod
     def get_current_round_fixtures(self):
-    
         url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds"
-
-        querystring = {"league":f"{self.api_id}","season":"2020",   "current":"true"}
-
+        querystring = {"league":f"{self.api_id}","season":f"{season}","current":"true"}
         headers = {
         'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
         'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
         }
-
         response = requests.request("GET", url, headers=headers, params=querystring)
-        
         resjson = response.json()
-    
         current_round = resjson['response']
-    
         return current_round
     
     @staticmethod
     def get_scorers(self):
-        
         url = "https://api-football-v1.p.rapidapi.com/v3/players/topscorers"
-
-        querystring = {"season":"2021","league":f"{self.api_id}"}
-
+        querystring = {"season":f"{season}","league":f"{self.api_id}"}
         headers = {
             'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
             'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
             }
-
         response = requests.request("GET", url, headers=headers, params=querystring)
-        
         resjson = response.json()
-    
         scorers = resjson['response']
-    
         return scorers
 
 ################    
@@ -144,7 +109,6 @@ class Team(db.Model):
     name = db.Column(db.Text, unique=True, nullable=False)
     players = db.Column(db.Text, unique=False, nullable=True)
     coaches = db.Column(db.Text, unique=False, nullable=True)
-
 
 ################
 ## USER MODEL ##
@@ -166,15 +130,10 @@ class User(db.Model):
     --> Register
     --> Authenticate
     """
-    
     __tablename__ = "users"
-    
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    
     username = db.Column(db.Text, nullable=False, unique=True)
-    
     password = db.Column(db.Text, nullable=False)
-    
     email = db.Column(db.Text, nullable=False, unique=True)
 
     first_name = db.Column(db.Text, nullable=False)
