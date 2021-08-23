@@ -12,6 +12,19 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+#############################
+### LEAGUES x TEAMS MODEL ###
+#############################
+
+class LeaguesTeams(db.Model):
+    __tablename__ = 'leagues_teams'
+    id = db.Column(db.Integer, primary_key=True)
+    leauge_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    
+    league = db.relationship('League', backref='leagues_teams')
+    team = db.relationship('Team', backref='leagues_teams')
+
 ####################
 ### LEAGUE MODEL ###
 ####################
@@ -24,8 +37,7 @@ class League(db.Model):
     __tablename__="leagues"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
-    team_ids = db.relationship('Team', backref='league', lazy=True)
-    
+    teams = db.relationship('Team', secondary='leagues_teams')
     
     @staticmethod
     def get_standings(self):
@@ -40,7 +52,7 @@ class League(db.Model):
         resjson = response.json()
         standings = resjson['response']
         standings_nested = standings[0]['league']['standings']
-        standings_array = standings_nested[0] 
+        standings_array = standings_nested[0]
         return standings_array
     
     @staticmethod
@@ -116,8 +128,8 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     players = db.Column(db.Text, unique=False, nullable=True)
-    coach = db.Column(db.Text, unique=False, nullable=True)
-    league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
+    coaches = db.Column(db.Text, unique=False, nullable=True)
+    leagues = db.relationship("League", secondary="leagues_teams")
     
     @staticmethod
     def get_player_stats(self):

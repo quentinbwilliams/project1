@@ -5,7 +5,7 @@ from app import app
 db.drop_all()
 db.create_all()
 
-PremierLeague = League(api_id="39",name="premier_league")
+PremierLeague = League(id="39",name="premier_league")
 
 db.session.add(PremierLeague)
 db.session.commit()
@@ -27,7 +27,7 @@ def seed_teams_table():
     """  """
     team_names_ids = PremierLeague.get_team_names_ids(PremierLeague)
     for name, id in team_names_ids:
-        name = Team(api_id=id, name=name, league_id=PremierLeague.api_id)
+        name = Team(id=id, name=name, league_id=PremierLeague.id)
         db.session.add(name)
     db.session.commit()
     

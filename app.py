@@ -17,8 +17,8 @@ connect_db(app)
 @app.route("/")
 def homepage():
     """Homepage of site; redirect to register."""
+    
 
-    return render_template("home.html")
 
 ##################
 ### USER LOGIC ###
