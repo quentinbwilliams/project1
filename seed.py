@@ -1,5 +1,6 @@
-from models import db, League, Team
+from models import db, League, Team, Match
 from app import app
+import json
 
 
 db.drop_all()
@@ -31,4 +32,19 @@ def seed_teams_table():
         db.session.add(name)
     db.session.commit()
     
-seed_teams_table()
+def seed_matches():
+    upcoming_matches = PremierLeague.get_upcoming_matches(PremierLeague)
+    for match in upcoming_matches:
+        id = match['fixture']['id']
+        league_id = match['league']['id']
+        home = match['teams']['home']['name']
+        away = match['teams']['away']['name']
+        date = match['fixture']['date']
+        referee = match['fixture']['referee']
+        ht_score = (match['score']['halftime']['home'],match['score']['halftime']['away'])
+        ft_score = (match['score']['halftime']['home'],match['score']['halftime']['away'])
+        et_score = (match['score']['halftime']['home'],match['score']['halftime']['away'])
+        new_match = Match(id=id,league_id=league_id,home=home,away=away,ht_score=ht_score,ft_score=ft_score,et_score=et_score,date=date,referee=referee)
+        db.session.add(new_match)
+    db.session.commit()
+    
