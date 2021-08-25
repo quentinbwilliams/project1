@@ -2,4 +2,4 @@ __pycache__
 venv
 secrets.py
 scrap.py
-many_to_many.py
+.many_to_many.py
