@@ -10,7 +10,7 @@ Matchday utilizes API Football for updates and stat tracking.
 
 ### Team routes
 
-Team pages
+Team pages, Team statistics
 
 ### Player routes
 
@@ -18,12 +18,12 @@ Player statistics
 
 ### User routes
 
-Favorite club
-Follow players
-Follow league
+Favorite club, Follow players, Follow league, validate with user_id instead of username
 
 # League route
 
-Schedule
-Odds
-Injury & Transfer news
+Schedule, Odds, Injury & Transfer news, Extend League methods outside of PL, but to any league
+
+# Cup competitions
+
+Champions League, Europa League, FA Cup, etc. -- Since Cup comps have different structure than leagues, establish Cup Model. League to Team is One to Many; Cup to Team is Many to Many.

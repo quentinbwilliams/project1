@@ -45,9 +45,14 @@ def register():
         user = User.register(username, password, email)
         db.session.commit()
         session['username'] = user.username
-        return redirect(f"/users/{user.username}")
+        return redirect(f"/users/{user.username}/update")
     else:
         return render_template("register.html", form=form)
+
+@app.route('/users/<int:user_id>/update')
+def update_profile():
+    """ Select favorite team, Players to follow, Change Username """
+    
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
