@@ -44,9 +44,8 @@ class League(db.Model):
         resjson = response.json()
         standings = resjson['response']
         standings_nested = standings[0]['league']['standings']
-        standings_array = standings_nested[0]
-        self.standings = standings_array
-        return standings_array
+        standings_list = standings_nested[0]
+        return standings_list
     
     @staticmethod
     def get_upcoming_matches(self):
@@ -111,6 +110,20 @@ class League(db.Model):
         table = self.get_standings(self)
         team_names_ids = [(team['team']['name'],team['team']['id']) for team in table]
         return team_names_ids
+    
+    @staticmethod
+    def get_team_info(self,team_id):
+        url = "https://api-football-v1.p.rapidapi.com/v3/players/topscorers"
+        querystring = {"id":f"{team_id}"}
+        headers = {
+            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
+            }
+        response = requests.request("GET", url, headers=headers, params=querystring)
+        resjson = response.json()
+        data = resjson['response']
+        print(data)
+        return data
    
 ##################    
 ### TEAM MODEL ###
@@ -124,9 +137,24 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     photo=db.Column(db.Text)
+    rank = db.Column(db.Integer)
+    points = db.Column(db.Integer)
+    games_played=db.Column(db.Integer)
+    games_won=db.Column(db.Integer)
+    games_drawn=db.Column(db.Integer)
+    games_lost=db.Column(db.Integer)
+    home_wins=db.Column(db.Integer)
+    home_draws=db.Column(db.Integer)
+    home_losses=db.Column(db.Integer)
+    away_wins=db.Column(db.Integer)
+    away_draws=db.Column(db.Integer)
+    away_losses=db.Column(db.Integer)
+    goal_diff = db.Column(db.Integer)
+    goals_for = db.Column(db.Integer)
+    goals_against = db.Column(db.Integer)
     players = db.Column(db.Text, unique=False, nullable=True)
     coach = db.Column(db.Text, unique=False, nullable=True)
-    player_stats = db.Column(db.Text)
+    player_stats = db.Column(db.Text, nullable=True)
     team_stats = db.Column(db.Text)
     transfers = db.Column(db.Text)
     # Fans = Number of users who favorite this team
@@ -153,7 +181,6 @@ class Team(db.Model):
     @staticmethod
     def get_player_stats(self):
         """  """ 
-        from secrets import API_FOOTBALL_KEY
         url = "https://api-football-v1.p.rapidapi.com/v3/players"
         querystring = {"team":f"{self.id}","season":f"{season}"}
         headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
@@ -165,7 +192,6 @@ class Team(db.Model):
     
     @staticmethod
     def get_team_stats(self):
-        from secrets import API_FOOTBALL_KEY
         url = "https://api-football-v1.p.rapidapi.com/v3/teams/statistics"
         querystring = {"league":f"{self.league_id}","season":f"{season}", "team":f"{self.id}"}
         headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
@@ -177,19 +203,15 @@ class Team(db.Model):
 
     @staticmethod
     def get_players(self):
-        from secrets import API_FOOTBALL_KEY
         url = "https://api-football-v1.p.rapidapi.com/v3/players"
         querystring = {"team":f"{self.id}","season":f"{season}"}
         headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
         res = requests.request("GET", url, headers=headers, params=querystring)
-        resjson=res.json()
-        response = resjson['response']
-        self.players = response
+        response=res.json()
         return response
     
     @staticmethod
     def get_transfers(self):
-        from secrets import API_FOOTBALL_KEY
         url = "https://api-football-v1.p.rapidapi.com/v3/transfers"
         querystring = {"team":f"{self.id}","season":f"{season}"}
         headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}

@@ -1,6 +1,6 @@
 {% extends 'base.html' %} {% block content %}
 <!-- LEAGUE TABLE -->
-<table class="table">
+<table class="table table-hover">
   <thead>
     <tr>
       <th scope="col" class="h3">Position</th>
@@ -17,11 +17,11 @@
   </thead>
   <tbody>
     {% for team in standings %}
-    <tr>
+    <tr class="table-row">
       <th scope="row" class="h3">{{ team['rank'] }}</th>
-      <td>
+      <td><a href="/league/PL/teams/{{ team['team']['id'] }}">
         <img src="{{ team['team']['logo'] }}" class="rounded img-fluid" />
-      </td>
+      </a></td>
       <td class="h3">{{ team['team']['name'] }}</td>
       <td class="h3">{{ team['points'] }}</td>
       <td class="h3">{{ team['form'] }}</td>

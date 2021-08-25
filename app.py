@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, session
 from forms import RegistrationForm, LoginForm
-from models import db, connect_db, User, League
+from models import db, connect_db, User, League, Team
 from werkzeug.exceptions import Unauthorized
 
 app = Flask(__name__)
@@ -25,7 +25,22 @@ def league_page():
     matches = premier_league.get_upcoming_matches(premier_league)
     return render_template('league_home.html', standings=standings, matches=matches)
 
-@app.route("/league/PL/")
+@app.route("/league/PL/teams/<int:team_id>")
+def show_team_data(team_id):
+    """ Serves info on current team """
+    premier_league = League.query.filter_by(name="premier_league").first()
+    team_info = premier_league.get_team_info(premier_league,team_id)
+    print("********************", team_info)
+    team_name = team_info[0]['team']['name']
+    team = Team(name=team_name,id=team_id)
+    db.session.add(team)
+    db.session.commit()
+    team_stats = team.get_team_stats(team)
+    team_players=team.get_players(team)
+    team_transfers=team.get_player(team)
+    return render_template('team_home.html', team=team,team_stats=team_stats,team_players=team_players,team_transfers=team_transfers)
+
+
     
 
 ##################
@@ -50,9 +65,14 @@ def register():
         return render_template("register.html", form=form)
 
 @app.route('/users/<int:user_id>/update')
-def update_profile():
+def update_user():
     """ Select favorite team, Players to follow, Change Username """
-    
+    return render_template('league_home.html')
+
+@app.route('/users/<int:user_id>/delete', methods=["GET","POST"])
+def delete_user():
+    """ Delete user """
+    return render_template('user_delete.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
