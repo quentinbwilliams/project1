@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, session
 from forms import RegistrationForm, LoginForm
-from models import db, connect_db, User, League, Team
+from models import db, connect_db, User, League, Team, Match, Player
 from werkzeug.exceptions import Unauthorized
 
 app = Flask(__name__)
@@ -12,24 +12,23 @@ app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
 connect_db(app)
 
-@app.route('/')
+@app.route("/", methods=["GET"])
 def homepage():
-    return redirect('/league/PL')
+    return redirect('/league/<int:league_id>')
 
-@app.route("/league/PL")
-def league_page():
+@app.route("/league/<int:league_id>", methods=["GET"])
+def league_page(league_id):
     """ Show Standings """
-    premier_league = League.query.filter_by(name="premier_league").first()
-    premier_league.get_standings(premier_league)
-    standings = premier_league.standings
-    matches = premier_league.get_upcoming_matches(premier_league)
+    league = League.query.filter_by(id=f"{league_id}").first()
+    standings = league.standings
+    matches = Match.query.filter_by(league_id=f"{league_id}").all()
     return render_template('league_home.html', standings=standings, matches=matches)
 
-@app.route("/league/PL/teams/<int:team_id>")
+@app.route("/teams/<int:team_id>", methods=["GET"])
 def show_team_data(team_id):
     """ Serves info on current team """
-    premier_league = League.query.filter_by(name="premier_league").first()
-    team_info = premier_league.get_team_info(premier_league,team_id)
+    league = League.query.filter_by(name="league").first()
+    team_info = league.get_team_info(league,team_id)
     print("********************", team_info)
     team_name = team_info[0]['team']['name']
     team = Team(name=team_name,id=team_id)
@@ -41,6 +40,12 @@ def show_team_data(team_id):
     return render_template('team_home.html', team=team,team_stats=team_stats,team_players=team_players,team_transfers=team_transfers)
 
 
+#  @app.route("/players/<int:player_id>", methods=["GET"])    
+def show_player_data(player_id):
+    
+#  @app.route("players/compare/<int:player1_id>/<int:player2_id>")
+def compare_players(player1_id,player2_id):
+    
     
 
 ##################

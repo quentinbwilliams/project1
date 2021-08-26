@@ -1,4 +1,4 @@
-from models import db, League, Team, Match
+from models import db, League, Team, Match, Player
 from app import app
 import json
 
@@ -20,7 +20,8 @@ def seed_teams_table(league_name):
     """  """
     standings = league_name.get_standings(league_name)
     for team in standings:
-        id = team['team']['id']  
+        id = team['team']['id']
+        league_id = league_name.id
         name = team['team']['name']
         photo = team['team']['logo']
         rank = team['rank']
@@ -38,15 +39,39 @@ def seed_teams_table(league_name):
         goal_diff = team['goalsDiff']
         goals_for = team['all']['goals']['for']    
         goals_against = team['all']['goals']['against']
-        
-        new_team = Team(id=id,name=name,photo=photo,rank=rank,points=points,games_played=games_played,games_won=games_won,games_drawn=games_drawn,games_lost=games_lost,home_wins=home_wins,home_draws=home_draws,home_losses=home_losses,away_wins=away_wins,away_draws=away_draws,away_losses=away_losses,goal_diff=goal_diff,goals_for=goals_for,goals_against=goals_against)
-        
-        players = new_team.get_players(new_team)
-        
+         
+        new_team = Team(id=id,name=name,photo=photo,rank=rank,points=points,games_played=games_played,games_won=games_won,games_drawn=games_drawn,games_lost=games_lost,home_wins=home_wins,home_draws=home_draws,home_losses=home_losses,away_wins=away_wins,away_draws=away_draws,away_losses=away_losses,goal_diff=goal_diff,goals_for=goals_for,goals_against=goals_against,league_id=league_id)
         
         db.session.add(new_team)
     db.session.commit()
 
+def seed_players_table(league_name):
+    """ Give league. Loop through league for each team id. Then call API via Team class method for active squad. Loop through squad """
+    league_teams = Team.query.filter_by(league_id=f"{league_name.id}").all()
+    print(league_teams)
+    for team in league_teams:
+        players = team.get_active_squad(team)
+        team_id = players[0]["team"]["id"]
+        team_name = players[0]["team"]["name"]
+        players_list = players[0]["players"]
+        for player in players_list:
+            id = player["id"]
+            name = player["name"]        
+            age = player["age"]
+            number = player["number"]
+            position = player["position"]
+            photo = player["photo"]
+            
+            new_player = Player(id=id,name=name,age=age,number=number,position=position,photo=photo,team_id=team_id,team_name=team_name)
+            
+            db.session.add(new_player)
+        db.session.commit()
+        
+def seed_teams_then_players_tables(league_name):
+    seed_teams_table(league_name)
+    seed_players_table(league_name)
+    
+seed_teams_then_players_tables(PremierLeague)
     
 def seed_matches_table(league_name):
     upcoming_matches = league_name.get_upcoming_matches(league_name)

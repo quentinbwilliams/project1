@@ -124,6 +124,16 @@ class League(db.Model):
         data = resjson['response']
         print(data)
         return data
+    
+    @staticmethod
+    def get_all_season_matches(self):
+        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        querystring = {"league":f"{self.league_id}","season":f"{season}","from":"2021-08-14","to":"2021-04-07"}
+        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
+        res = requests.request("GET", url, headers=headers, params=querystring)
+        resjson=res.json()
+        response = resjson['response']
+        return response
    
 ##################    
 ### TEAM MODEL ###
@@ -152,7 +162,7 @@ class Team(db.Model):
     goal_diff = db.Column(db.Integer)
     goals_for = db.Column(db.Integer)
     goals_against = db.Column(db.Integer)
-    players = db.Column(db.Text, unique=False, nullable=True)
+    players = db.relationship('Player', backref='team', lazy=True)
     coach = db.Column(db.Text, unique=False, nullable=True)
     player_stats = db.Column(db.Text, nullable=True)
     team_stats = db.Column(db.Text)
@@ -177,6 +187,22 @@ class Team(db.Model):
     passes_accurate=db.Column(db.Integer)
     passes_percent_accurate=db.Column(db.Integer)
     
+    @staticmethod
+    def get_active_squad(self):
+        """ """
+        url = "https://api-football-v1.p.rapidapi.com/v3/players/squads"
+
+        querystring = {"team":f"{self.id}"}
+
+        headers = {
+            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+            'x-rapidapi-key': "0c53816d30mshaf76a97a06df018p1a51f7jsn5f2149fe7ff0"
+            }
+
+        res = requests.request("GET", url, headers=headers, params=querystring)
+        resjson = res.json()
+        response = resjson['response']
+        return response
     
     @staticmethod
     def get_player_stats(self):
@@ -187,7 +213,6 @@ class Team(db.Model):
         res = requests.request("GET", url, headers=headers, params=querystring)
         resjson=res.json()
         response = resjson['response']
-        self.player_stats = response
         return response
     
     @staticmethod
@@ -198,7 +223,16 @@ class Team(db.Model):
         res = requests.request("GET", url, headers=headers, params=querystring)
         resjson=res.json()
         response = resjson['response']
-        self.team_stats = response
+        return response
+    
+    @staticmethod
+    def get_team_info(self):
+        url = "https://api-football-v1.p.rapidapi.com/v3/teams"
+        querystring = {"league":f"{self.league_id}","season":f"{season}", "id":f"{self.id}"}
+        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
+        res = requests.request("GET", url, headers=headers, params=querystring)
+        resjson=res.json()
+        response = resjson['response']
         return response
 
     @staticmethod
@@ -218,8 +252,8 @@ class Team(db.Model):
         res = requests.request("GET", url, headers=headers, params=querystring)
         resjson=res.json()
         response = resjson['response']
-        self.transfers = response
         return response
+    
     
 ####################
 ### MATCH  MODEL ###
@@ -240,8 +274,8 @@ class Match(db.Model):
     league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
     date=db.Column(db.Text)
     referee=db.Column(db.Text)
-    home = db.Column(db.Text)
-    away = db.Column(db.Text)
+    home = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    away = db.Column(db.Integer, db.ForeignKey('teams.id'))
     ht_score = db.Column(db.Text,nullable=True)
     ft_score = db.Column(db.Text,nullable=True)
     et_score = db.Column(db.Text,nullable=True)
@@ -256,7 +290,9 @@ class Player(db.Model):
     age=db.Column(db.Integer)
     nationality=db.Column(db.Text)
     photo=db.Column(db.Text)
-    team=db.Column(db.Text)
+    team_id=db.Column(db.Integer, db.ForeignKey('teams.id'))
+    team_name=db.Column(db.Text)
+    number=db.Column(db.Integer)
     
     # STATS BELOW
     position=db.Column(db.Text)
