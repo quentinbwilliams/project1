@@ -1,3 +1,23 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} {%block content%}
+<h1><img src="{{ team.photo }}" class="rounded img-fluid" />{{ team.name }}</h1>
+<h3>League rank: {{ team.rank }}</h3>
+<h3>League form: {{ team.form }}</h3>
+<h3>League points: {{ team.points }}</h3>
+<h3>Games played: {{ team.games_played }}</h3>
+<h3>Wins: {{ team.games_won }}</h3>
+<h3>Draws: {{ team.games_drawn }}</h3>
+<h3>Losses: {{ team.games_lost }}</h3>
+<h3>Home wins: {{ team.home_wins }}</h3>
+<h3>Home draws: {{ team.home_draws }}</h3>
+<h3>Home losses: {{ team.home_losses }}</h3>
+<h3>Away wins: {{ team.away_wins }}</h3>
+<h3>Away draws: {{ team.away_draws }}</h3>
+<h3>Away losses: {{ team.away_losses }}</h3>
 
-<h1>{{ team['team']['name'] }}</h1>
+<h1>Players</h1>
+{%for player in players%}
+<h3><img src="{{ player.photo }}" class="rounded img-fluid" /> {{ player.name }}</h3>
+<p>#{{player.number}}</p>
+<p>{{player.position}}</p>
+{%endfor%}
+{%endblock%}

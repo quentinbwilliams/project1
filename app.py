@@ -20,32 +20,27 @@ def homepage():
 def league_page(league_id):
     """ Show Standings """
     league = League.query.filter_by(id=f"{league_id}").first()
-    standings = league.standings
-    matches = Match.query.filter_by(league_id=f"{league_id}").all()
-    return render_template('league_home.html', standings=standings, matches=matches)
+    teams = Team.query.filter_by(league_id=f"{league_id}").all()
+    return render_template('league_home.html', league=league, teams=teams)
 
-@app.route("/teams/<int:team_id>", methods=["GET"])
+@app.route("/team/<int:team_id>", methods=["GET"])
 def show_team_data(team_id):
     """ Serves info on current team """
-    league = League.query.filter_by(name="league").first()
-    team_info = league.get_team_info(league,team_id)
-    print("********************", team_info)
-    team_name = team_info[0]['team']['name']
-    team = Team(name=team_name,id=team_id)
-    db.session.add(team)
-    db.session.commit()
-    team_stats = team.get_team_stats(team)
-    team_players=team.get_players(team)
-    team_transfers=team.get_player(team)
-    return render_template('team_home.html', team=team,team_stats=team_stats,team_players=team_players,team_transfers=team_transfers)
+    team = Team.query.filter_by(id=f"{team_id}").first()
+    players = Player.query.filter_by(team_id=f"{team_id}").all()
+    return render_template('team_home.html',team=team, players=players)
 
 
-#  @app.route("/players/<int:player_id>", methods=["GET"])    
+@app.route("/players/<int:player_id>", methods=["GET"])    
 def show_player_data(player_id):
+    player = Player.query.filter_by(id=f"{player_id}")
+    return render_template("player.html",player=player)
     
-#  @app.route("players/compare/<int:player1_id>/<int:player2_id>")
+@app.route("/players/compare/<int:player1_id>/<int:player2_id>")
 def compare_players(player1_id,player2_id):
-    
+    player1 = Player.query.filter_by(id=f"{player1_id}")
+    player2 = Player.query.filter_by(id=f"{player2_id}")
+    return render_template("player_comparison.html", player1=player1,player2=player2)
     
 
 ##################
@@ -63,6 +58,7 @@ def register():
         password = form.password.data
         email = form.email.data
         user = User.register(username, password, email)
+        db.session.add(user)
         db.session.commit()
         session['username'] = user.username
         return redirect(f"/users/{user.username}/update")

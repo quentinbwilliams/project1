@@ -4,7 +4,12 @@ from flask_bcrypt import Bcrypt
 from season import season
 import requests
 
-API_FOOTBALL_KEY = "0c53816d30mshaf76a97a06df018p1a51f7jsn5f2149fe7ff0"
+API_FOOTBALL_URL = "https://api-football-v1.p.rapidapi.com/v3/"
+HEADERS = {
+    'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
+    'x-rapidapi-key': "0c53816d30mshaf76a97a06df018p1a51f7jsn5f2149fe7ff0"
+    }
+
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -29,18 +34,14 @@ class League(db.Model):
     standings=db.Column(db.Text)
     teams = db.relationship('Team', backref='league', lazy=True)
     matches = db.Column(db.Text)
-    # matches = db.relationship('Match', backref='league', lazy=True)
+    matches = db.relationship('Match', backref='league', lazy=True)
     
     @staticmethod
     def get_standings(self):
         """  """
-        url = "https://api-football-v1.p.rapidapi.com/v3/standings"
+        url = f"{API_FOOTBALL_URL}/standings"
         querystring = {"season":f"{season}","league":f"{self.id}"}
-        headers = {
-            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
-            }
-        response = requests.request("GET", url, headers=headers, params=querystring)
+        response = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson = response.json()
         standings = resjson['response']
         standings_nested = standings[0]['league']['standings']
@@ -52,13 +53,9 @@ class League(db.Model):
         """
         Returns the next 30 competition fixtures 
         """
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        url = f"{API_FOOTBALL_URL}/fixtures"
         querystring = {"next":"30","league":f"{self.id}"}
-        headers = {
-            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
-            }
-        response = requests.request("GET", url, headers=headers, params=querystring)
+        response = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson = response.json()
         response = resjson['response']
         data = response
@@ -67,13 +64,9 @@ class League(db.Model):
     
     @staticmethod
     def get_live_matches(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        url = f"{API_FOOTBALL_URL}/fixtures"
         querystring = {"live":"all","league":f"{self.id}"}
-        headers = {
-            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-            'x-rapidapi-key':f"{API_FOOTBALL_KEY}"
-            }
-        response = requests.request("GET", url, headers=headers, params=querystring)
+        response = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson = response.json()
         live_fixtures = resjson
         if live_fixtures['results'] == 0:
@@ -83,24 +76,18 @@ class League(db.Model):
         
     @staticmethod
     def get_current_round_matches(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures/rounds"
+        url = f"{API_FOOTBALL_URL}/fixtures/rounds"
         querystring = {"league":f"{self.id}","season":f"{season}","current":"true"}
-        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
-        }
-        response = requests.request("GET", url, headers=headers, params=querystring)
+        response = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson = response.json()
         current_round = resjson['response']
         return current_round
     
     @staticmethod
     def get_scorers(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/players/topscorers"
+        url = f"{API_FOOTBALL_URL}/players/topscorers"
         querystring = {"season":f"{season}","league":f"{self.id}"}
-        headers = {
-            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
-            }
-        response = requests.request("GET", url, headers=headers, params=querystring)
+        response = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson = response.json()
         scorers = resjson['response']
         return scorers
@@ -113,13 +100,9 @@ class League(db.Model):
     
     @staticmethod
     def get_team_info(self,team_id):
-        url = "https://api-football-v1.p.rapidapi.com/v3/players/topscorers"
+        url = f"{API_FOOTBALL_URL}/players/topscorers"
         querystring = {"id":f"{team_id}"}
-        headers = {
-            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-            'x-rapidapi-key': f"{API_FOOTBALL_KEY}"
-            }
-        response = requests.request("GET", url, headers=headers, params=querystring)
+        response = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson = response.json()
         data = resjson['response']
         print(data)
@@ -127,11 +110,28 @@ class League(db.Model):
     
     @staticmethod
     def get_all_season_matches(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/fixtures"
+        url = f"{API_FOOTBALL_URL}/fixtures"
         querystring = {"league":f"{self.league_id}","season":f"{season}","from":"2021-08-14","to":"2021-04-07"}
-        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
-        res = requests.request("GET", url, headers=headers, params=querystring)
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson=res.json()
+        response = resjson['response']
+        return response
+    
+    @staticmethod
+    def get_completed_matches(self):
+        url = f"{API_FOOTBALL_URL}/fixtures"
+        querystring = {"league":f"{self.league_id}","season":f"{season}","status":"FT"}
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
+        resjson = res.json()
+        response = resjson['response']
+        return response
+    
+    @staticmethod
+    def get_upcoming_matches(self):
+        url = f"{API_FOOTBALL_URL}/fixtures"
+        querystring = {"league":f"{self.league_id}","season":f"{season}","status":"NS"}
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
+        resjson = res.json()
         response = resjson['response']
         return response
    
@@ -167,7 +167,7 @@ class Team(db.Model):
     player_stats = db.Column(db.Text, nullable=True)
     team_stats = db.Column(db.Text)
     transfers = db.Column(db.Text)
-    # Fans = Number of users who favorite this team
+    # fans = db.relationship('User', backref='team', lazy=True)
     league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
     
     # STATS BELOW
@@ -190,16 +190,9 @@ class Team(db.Model):
     @staticmethod
     def get_active_squad(self):
         """ """
-        url = "https://api-football-v1.p.rapidapi.com/v3/players/squads"
-
+        url = f"{API_FOOTBALL_URL}/players/squads"
         querystring = {"team":f"{self.id}"}
-
-        headers = {
-            'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-            'x-rapidapi-key': "0c53816d30mshaf76a97a06df018p1a51f7jsn5f2149fe7ff0"
-            }
-
-        res = requests.request("GET", url, headers=headers, params=querystring)
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson = res.json()
         response = resjson['response']
         return response
@@ -207,49 +200,44 @@ class Team(db.Model):
     @staticmethod
     def get_player_stats(self):
         """  """ 
-        url = "https://api-football-v1.p.rapidapi.com/v3/players"
+        url = f"{API_FOOTBALL_URL}/players"
         querystring = {"team":f"{self.id}","season":f"{season}"}
-        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
-        res = requests.request("GET", url, headers=headers, params=querystring)
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson=res.json()
         response = resjson['response']
         return response
     
     @staticmethod
     def get_team_stats(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/teams/statistics"
+        url = f"{API_FOOTBALL_URL}/teams/statistics"
         querystring = {"league":f"{self.league_id}","season":f"{season}", "team":f"{self.id}"}
-        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
-        res = requests.request("GET", url, headers=headers, params=querystring)
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson=res.json()
         response = resjson['response']
         return response
     
     @staticmethod
     def get_team_info(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/teams"
+        url = f"{API_FOOTBALL_URL}/teams"
         querystring = {"league":f"{self.league_id}","season":f"{season}", "id":f"{self.id}"}
-        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
-        res = requests.request("GET", url, headers=headers, params=querystring)
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson=res.json()
         response = resjson['response']
         return response
 
     @staticmethod
     def get_players(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/players"
+        url = f"{API_FOOTBALL_URL}/players"
         querystring = {"team":f"{self.id}","season":f"{season}"}
-        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
-        res = requests.request("GET", url, headers=headers, params=querystring)
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
         response=res.json()
         return response
     
     @staticmethod
     def get_transfers(self):
-        url = "https://api-football-v1.p.rapidapi.com/v3/transfers"
+        url = f"{API_FOOTBALL_URL}/transfers"
         querystring = {"team":f"{self.id}","season":f"{season}"}
-        headers = {'x-rapidapi-host': "api-football-v1.p.rapidapi.com",'x-rapidapi-key': f"{API_FOOTBALL_KEY}"}
-        res = requests.request("GET", url, headers=headers, params=querystring)
+        res = requests.request("GET", url, headers=HEADERS, params=querystring)
         resjson=res.json()
         response = resjson['response']
         return response
@@ -273,13 +261,25 @@ class Match(db.Model):
     id=db.Column(db.Integer,primary_key=True)
     league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
     date=db.Column(db.Text)
-    referee=db.Column(db.Text)
+    round = db.Column(db.Text)
+    timezone=db.Column(db.Text)
+    referee=db.Column(db.Text, nullable=True)
     home = db.Column(db.Integer, db.ForeignKey('teams.id'))
     away = db.Column(db.Integer, db.ForeignKey('teams.id'))
     ht_score = db.Column(db.Text,nullable=True)
     ft_score = db.Column(db.Text,nullable=True)
     et_score = db.Column(db.Text,nullable=True)
+    penalty_shootout = db.Column(db.Integer,nullable=False)
+    stadium_id = db.Column(db.Integer)
+    stadium_name = db.Column(db.Text)
+    city_name = db.Column(db.Text)
+    home_goals = db.Column(db.Integer,nullable=True)
+    away_goals = db.Column(db.Integer, nullable=True)
+    home_win = db.Column(db.Boolean, nullable=True)
+    away_win = db.Column(db.Boolean, nullable=True)
+    draw = db.Column(db.Boolean, nullable=True)
     
+
 class Player(db.Model):
     """
     
@@ -346,7 +346,7 @@ class User(db.Model):
     username = db.Column(db.Text, nullable=False, unique=True)
     password = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, nullable=False, unique=True)
-    favorite_team = db.Column(db.Text)
+    # favorite_team = db.Column(db.Integer, db.ForeignKey('team.id'))
     following_leagues = db.Column(db.Text)
     following_teams = db.Column(db.Text)
     following_players = db.Column(db.Text)

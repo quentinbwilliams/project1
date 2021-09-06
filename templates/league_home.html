@@ -16,34 +16,26 @@
     </tr>
   </thead>
   <tbody>
-    {% for team in standings %}
+    {% for team in teams %}
     <tr class="table-row">
-      <th scope="row" class="h3">{{ team['rank'] }}</th>
-      <td><a href="/league/PL/teams/{{ team['team']['id'] }}">
-        <img src="{{ team['team']['logo'] }}" class="rounded img-fluid" />
-      </a></td>
-      <td class="h3">{{ team['team']['name'] }}</td>
-      <td class="h3">{{ team['points'] }}</td>
-      <td class="h3">{{ team['form'] }}</td>
-      <td class="h3">{{ team['goalsDiff'] }}</td>
-      <td class="h3">{{ team['all']['played'] }}</td>
-      <td class="h3">{{ team['all']['win'] }}</td>
-      <td class="h3">{{ team['all']['draw'] }}</td>
-      <td class="h3">{{ team['all']['lose'] }}</td>
+      <th scope="row" class="h3">{{ team.rank }}</th>
+      <td>
+        <a href="/team/{{ team.id }}">
+          <img src="{{ team.photo }}" class="rounded img-fluid" />
+        </a>
+      </td>
+      <td class="h3">{{ team.name }}</td>
+      <td class="h3">{{ team.points }}</td>
+      <td class="h3">{{ team.form }}</td>
+      <td class="h3">{{ team.goal_diff }}</td>
+      <td class="h3">{{ team.games_played }}</td>
+      <td class="h3">{{ team.game_won }}</td>
+      <td class="h3">{{ team.games_drawn }}</td>
+      <td class="h3">{{ team.games_lost }}</td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
-<div class="container">
-{% for match in matches %}
-    <div class="card">
-        <h5 class="card-title">{{ match['teams']['home']['logo'] }} vs. {{ match['teams']['away']['logo'] }}</h5>
-        <h6 class="card-subtitle mb-2 text-muted">{{ match['teams']['home']['name'] }} hosts {{ match['teams']['away']['name'] }}</h6>
-        <p>When: {{ match['fixture']['date'] }}</p>
-        <p>Where: {{ match['fixture']['venue']['name'] }}</p>
-    </div>
-</div>
-{% endfor %}
 {% endblock %}
 
 <!-- Upcoming Matches -->
