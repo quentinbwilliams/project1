@@ -1,15 +1,9 @@
-from requests.models import StreamConsumedError
+from api_client import api_football
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
-from season import season
 import requests
 
-API_FOOTBALL_URL = "https://api-football-v1.p.rapidapi.com/v3/"
-HEADERS = {
-    'x-rapidapi-host': "api-football-v1.p.rapidapi.com",
-    'x-rapidapi-key': "0c53816d30mshaf76a97a06df018p1a51f7jsn5f2149fe7ff0"
-    }
-
+season = 2021
 
 bcrypt = Bcrypt()
 db = SQLAlchemy()
@@ -18,9 +12,6 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
-####################
-### LEAGUE MODEL ###
-####################
 
 class League(db.Model):
     """
@@ -39,11 +30,7 @@ class League(db.Model):
     @staticmethod
     def get_standings(self):
         """  """
-        url = f"{API_FOOTBALL_URL}/standings"
-        querystring = {"season":f"{season}","league":f"{self.id}"}
-        response = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = response.json()
-        standings = resjson['response']
+        standings = api_football.api_call("standings",league=f"{self.id}",season=f"{season}")
         standings_nested = standings[0]['league']['standings']
         standings_list = standings_nested[0]
         return standings_list
@@ -53,44 +40,27 @@ class League(db.Model):
         """
         Returns the next 30 competition fixtures 
         """
-        url = f"{API_FOOTBALL_URL}/fixtures"
-        querystring = {"next":"30","league":f"{self.id}"}
-        response = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = response.json()
-        response = resjson['response']
-        data = response
-        self.matches = data
-        return data
+        response = api_football.api_call("fixtures",next="30",league=f"{self.id}")
+        self.matches = response
+        return response
     
     @staticmethod
     def get_live_matches(self):
-        url = f"{API_FOOTBALL_URL}/fixtures"
-        querystring = {"live":"all","league":f"{self.id}"}
-        response = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = response.json()
-        live_fixtures = resjson
-        if live_fixtures['results'] == 0:
+        response = api_football.api_call("fixtures",live="all",league=f"{self.id}")
+        if response['results'] == 0:
             return False
         else:
-            return live_fixtures
+            return response
         
     @staticmethod
     def get_current_round_matches(self):
-        url = f"{API_FOOTBALL_URL}/fixtures/rounds"
-        querystring = {"league":f"{self.id}","season":f"{season}","current":"true"}
-        response = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = response.json()
-        current_round = resjson['response']
-        return current_round
+        response = api_football.api_call("fixtures/rounds", league=f"{self.id}",season=f"{season}",current="true")
+        return response
     
     @staticmethod
     def get_scorers(self):
-        url = f"{API_FOOTBALL_URL}/players/topscorers"
-        querystring = {"season":f"{season}","league":f"{self.id}"}
-        response = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = response.json()
-        scorers = resjson['response']
-        return scorers
+        response = api_football.api_call("players/topscorers", season=f"{season}", league=f"{self.id}")
+        return response
     
     @staticmethod
     def get_team_names_ids(self):
@@ -100,41 +70,17 @@ class League(db.Model):
     
     @staticmethod
     def get_team_info(self,team_id):
-        url = f"{API_FOOTBALL_URL}/players/topscorers"
-        querystring = {"id":f"{team_id}"}
-        response = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = response.json()
-        data = resjson['response']
-        print(data)
-        return data
-    
-    @staticmethod
-    def get_all_season_matches(self):
-        url = f"{API_FOOTBALL_URL}/fixtures"
-        querystring = {"league":f"{self.league_id}","season":f"{season}","from":"2021-08-14","to":"2021-04-07"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson=res.json()
-        response = resjson['response']
+        response = api_football.api_call("players/topscorers",id=f"{team_id}")
         return response
+    
     
     @staticmethod
     def get_completed_matches(self):
-        url = f"{API_FOOTBALL_URL}/fixtures"
-        querystring = {"league":f"{self.league_id}","season":f"{season}","status":"FT"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = res.json()
-        response = resjson['response']
+        response = api_football.api_call("fixtures",league=f"{self.id}",season=f"{season}",status="FT")
         return response
     
-    @staticmethod
-    def get_upcoming_matches(self):
-        url = f"{API_FOOTBALL_URL}/fixtures"
-        querystring = {"league":f"{self.league_id}","season":f"{season}","status":"NS"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = res.json()
-        response = resjson['response']
-        return response
-   
+
+
 ##################    
 ### TEAM MODEL ###
 ##################
@@ -189,59 +135,36 @@ class Team(db.Model):
     
     @staticmethod
     def get_active_squad(self):
-        """ """
-        url = f"{API_FOOTBALL_URL}/players/squads"
-        querystring = {"team":f"{self.id}"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson = res.json()
-        response = resjson['response']
+        """ Call API for current squad players """
+        response = api_football.api_call("players/squads", team=f"{self.id}")
         return response
     
     @staticmethod
     def get_player_stats(self):
-        """  """ 
-        url = f"{API_FOOTBALL_URL}/players"
-        querystring = {"team":f"{self.id}","season":f"{season}"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson=res.json()
-        response = resjson['response']
+        """ Call API for stats on current team players """ 
+        response = api_football.api_call("players", season=f"{season}", team=f"{self.id}")
         return response
     
     @staticmethod
     def get_team_stats(self):
-        url = f"{API_FOOTBALL_URL}/teams/statistics"
-        querystring = {"league":f"{self.league_id}","season":f"{season}", "team":f"{self.id}"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson=res.json()
-        response = resjson['response']
+        response = api_football.api_call("teams/statistics", season=f"{season}", league=f"{self.league_id}", team=f"{self.id}")
         return response
     
     @staticmethod
     def get_team_info(self):
-        url = f"{API_FOOTBALL_URL}/teams"
-        querystring = {"league":f"{self.league_id}","season":f"{season}", "id":f"{self.id}"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson=res.json()
-        response = resjson['response']
+        response = api_football.api_call("teams", season=f"{season}", league=f"{self.league_id}", id=f"{self.id}")
         return response
 
     @staticmethod
     def get_players(self):
-        url = f"{API_FOOTBALL_URL}/players"
-        querystring = {"team":f"{self.id}","season":f"{season}"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        response=res.json()
+        response = api_football.api_call("players", season=f"{season}", team=f"{self.id}")
         return response
     
     @staticmethod
     def get_transfers(self):
-        url = f"{API_FOOTBALL_URL}/transfers"
-        querystring = {"team":f"{self.id}","season":f"{season}"}
-        res = requests.request("GET", url, headers=HEADERS, params=querystring)
-        resjson=res.json()
-        response = resjson['response']
+        response = api_football.api_call("transfers", season=f"{season}", team=f"{self.id}")
         return response
-    
+
     
 ####################
 ### MATCH  MODEL ###

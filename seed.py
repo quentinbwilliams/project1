@@ -48,7 +48,6 @@ def seed_teams_table(league_name):
 def seed_players_table(league_name):
     """ Give league. Loop through league for each team id. Then call API via Team class method for active squad. Loop through squad """
     league_teams = Team.query.filter_by(league_id=f"{league_name.id}").all()
-    print(league_teams)
     for team in league_teams:
         players = team.get_active_squad(team)
         team_id = players[0]["team"]["id"]
