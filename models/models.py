@@ -1,4 +1,4 @@
-from api_client import api_football
+from models.api_client import api_football
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import requests
@@ -23,7 +23,6 @@ class League(db.Model):
     photo=db.Column(db.Text)
     standings=db.Column(db.Text)
     teams = db.relationship('Team', backref='league', lazy=True)
-    matches = db.Column(db.Text)
     matches = db.relationship('Match', backref='league', lazy=True)
     
     @staticmethod
@@ -87,6 +86,9 @@ class Team(db.Model):
     __tablename__="teams"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
+    league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
+    players = db.relationship('Player', backref='team', lazy=True)
+    coach = db.Column(db.Text, unique=False, nullable=True)
     photo=db.Column(db.Text)
     rank = db.Column(db.Integer)
     points = db.Column(db.Integer)
@@ -103,13 +105,9 @@ class Team(db.Model):
     goal_diff = db.Column(db.Integer)
     goals_for = db.Column(db.Integer)
     goals_against = db.Column(db.Integer)
-    players = db.relationship('Player', backref='team', lazy=True)
-    coach = db.Column(db.Text, unique=False, nullable=True)
     player_stats = db.Column(db.Text, nullable=True)
     team_stats = db.Column(db.Text)
     transfers = db.Column(db.Text)
-    # fans = db.relationship('User', backref='team', lazy=True)
-    league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
     
     # STATS BELOW
     shots_on_goal=db.Column(db.Integer)
@@ -169,12 +167,12 @@ class Match(db.Model):
     __tablename__="matches"
     id=db.Column(db.Integer,primary_key=True)
     league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
+    home = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    away = db.Column(db.Integer, db.ForeignKey('teams.id'))
     date=db.Column(db.Text)
     round = db.Column(db.Text)
     timezone=db.Column(db.Text)
     referee=db.Column(db.Text, nullable=True)
-    home = db.Column(db.Integer, db.ForeignKey('teams.id'))
-    away = db.Column(db.Integer, db.ForeignKey('teams.id'))
     ht_score = db.Column(db.Text,nullable=True)
     ft_score = db.Column(db.Text,nullable=True)
     et_score = db.Column(db.Text,nullable=True)
@@ -231,6 +229,13 @@ class Player(db.Model):
     penalties_missed=db.Column(db.Integer)
     penalties_saved=db.Column(db.Integer)    
     
+class TeamPlayers(db.Model):
+    """ Mapping teams with users to establish fandom """
+    __tablename__ = "team_players"
+    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
+    player_id = db.Column(db.Integer, db.ForeignKey("players.id"))
+
 ##################
 ### USER MODEL ###
 ##################
@@ -255,10 +260,6 @@ class User(db.Model):
     username = db.Column(db.Text, nullable=False, unique=True)
     password = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, nullable=False, unique=True)
-    # favorite_team = db.Column(db.Integer, db.ForeignKey('team.id'))
-    following_leagues = db.Column(db.Text)
-    following_teams = db.Column(db.Text)
-    following_players = db.Column(db.Text)
     
     @classmethod
     def register(cls, username, password, email):
@@ -282,16 +283,36 @@ class User(db.Model):
             return 'that email is already registered with an account'
         
     @classmethod
-    def authenticate(cls, username, password, email):
+    def authenticate(cls, password, email):
         """ Validate that user exists & password is correct. If valid, return user. Else, return false """
-        # check if username exists in database
-        username_exists = User.query.filter_by(username=username).first()
         # check if email exists in database
-        email_exists = User.query.filter_by(email=email).first()
-        # if the username is in the table AND bcrypt returns the same hash for the password stored in the user table and password from form, return authorized user instance
-        if username_exists and email_exists and bcrypt.check_password_hash(username_exists.password, password):
-            # return user instance
-            return username_exists
+        email = User.query.filter_by(email=email).first()
+        if email:
+            authorize = bcrypt.check_password_hash(email.password, password)
+            if authorize:
+                username = email.username
+                return username
         else:
             # if username is not in db or password does not match, deny
             return False    
+
+class LeagueFans(db.Model):
+    """ Mapping leagues with users to allow users to follow leagues """
+    __tablename__ = "league_fans"
+    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
+    league_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    
+class TeamFans(db.Model):
+    """ Mapping teams with users to establish fandom """
+    __tablename__ = "team_fans"
+    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
+    team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    
+class PlayerFans(db.Model):
+    """ Mapping teams with users to establish fandom """
+    __tablename__ = "player_fans"
+    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
+    player_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
