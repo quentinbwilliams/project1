@@ -3,8 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import requests
 
-season = 2021
-
 bcrypt = Bcrypt()
 db = SQLAlchemy()
 def connect_db(app):
@@ -12,11 +10,12 @@ def connect_db(app):
     db.app = app
     db.init_app(app)
 
+season = 2021
 
 class League(db.Model):
     """
     Model Class for leagues.
-    Everything inherits from league
+    Everything inherits from League
     """
     __tablename__="leagues"
     id = db.Column(db.Integer, primary_key=True)
@@ -29,7 +28,7 @@ class League(db.Model):
     
     @staticmethod
     def get_standings(self):
-        """  """
+        """ Returns a list of each team in the league in the current order of standing """
         standings = api_football.api_call("standings",league=f"{self.id}",season=f"{season}")
         standings_nested = standings[0]['league']['standings']
         standings_list = standings_nested[0]
@@ -37,15 +36,14 @@ class League(db.Model):
     
     @staticmethod
     def get_upcoming_matches(self):
-        """
-        Returns the next 30 competition fixtures 
-        """
+        """ Returns the next 30 competition fixtures """
         response = api_football.api_call("fixtures",next="30",league=f"{self.id}")
         self.matches = response
         return response
     
     @staticmethod
     def get_live_matches(self):
+        """ Returns live matches or False if no matches are live in that league """
         response = api_football.api_call("fixtures",live="all",league=f"{self.id}")
         if response['results'] == 0:
             return False
@@ -54,33 +52,30 @@ class League(db.Model):
         
     @staticmethod
     def get_current_round_matches(self):
+        """ Returns the current round of fixtures for the league """
         response = api_football.api_call("fixtures/rounds", league=f"{self.id}",season=f"{season}",current="true")
         return response
     
     @staticmethod
     def get_scorers(self):
+        """ Returns the top-scorers for the league """
         response = api_football.api_call("players/topscorers", season=f"{season}", league=f"{self.id}")
         return response
     
     @staticmethod
     def get_team_names_ids(self):
+        """ Calls .get_standings(self) method; creates a list of tuples with each team name and id [(team_name, team_id),...] """
         table = self.get_standings(self)
         team_names_ids = [(team['team']['name'],team['team']['id']) for team in table]
         return team_names_ids
     
-    @staticmethod
-    def get_team_info(self,team_id):
-        response = api_football.api_call("players/topscorers",id=f"{team_id}")
-        return response
-    
-    
+
     @staticmethod
     def get_completed_matches(self):
+        """ Returns all matches for current season in league that have status of FT (full-time) """
         response = api_football.api_call("fixtures",league=f"{self.id}",season=f"{season}",status="FT")
         return response
     
-
-
 ##################    
 ### TEAM MODEL ###
 ##################
@@ -135,29 +130,20 @@ class Team(db.Model):
     
     @staticmethod
     def get_active_squad(self):
-        """ Call API for current squad players """
+        """ Returns all current squad players """
         response = api_football.api_call("players/squads", team=f"{self.id}")
         return response
     
     @staticmethod
     def get_player_stats(self):
-        """ Call API for stats on current team players """ 
+        """ Returns stats current team players """ 
         response = api_football.api_call("players", season=f"{season}", team=f"{self.id}")
         return response
     
     @staticmethod
     def get_team_stats(self):
+        """ Returns all stats for a team in the current season and league """
         response = api_football.api_call("teams/statistics", season=f"{season}", league=f"{self.league_id}", team=f"{self.id}")
-        return response
-    
-    @staticmethod
-    def get_team_info(self):
-        response = api_football.api_call("teams", season=f"{season}", league=f"{self.league_id}", id=f"{self.id}")
-        return response
-
-    @staticmethod
-    def get_players(self):
-        response = api_football.api_call("players", season=f"{season}", team=f"{self.id}")
         return response
     
     @staticmethod

@@ -2,7 +2,6 @@ from models import db, League, Team, Match, Player
 from app import app
 import json
 
-
 db.drop_all()
 db.create_all()
 
