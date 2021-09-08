@@ -1,4 +1,4 @@
-from models import db, League, Team, Match, Player
+from models.models import db, League, Team, Match, Player
 from app import app
 import json
 
@@ -93,4 +93,3 @@ def seed_teams_tables():
     leagues = League.query.all()
     for league in leagues:
         seed_teams_table(league)
-        

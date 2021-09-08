@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, session
 from forms import RegistrationForm, LoginForm
-from models import db, connect_db, User, League, Team, Match, Player
+from models.models import LeagueFans, TeamFans, PlayerFans, db, connect_db, User, League, Team, Match, Player
 from werkzeug.exceptions import Unauthorized
 
 app = Flask(__name__)
@@ -15,6 +15,19 @@ connect_db(app)
 @app.route("/", methods=["GET"])
 def homepage():
     return redirect('/league/<int:league_id>')
+
+@app.route("/feed")
+def show_feed():
+    if "username" not in session:
+        return redirect("/login")
+    else:
+        username = session["username"]
+        user = User.query.filter_by(username=username).first()
+        user_leagues = LeagueFans.query.filter_by(user_id=user.id).all()
+        user_teams = TeamFans.query.filter_by(user_id=user.id).all()
+        user_players = PlayerFans.query.filter_by(user_id=user.id).all()
+        return render_template("feed.html", leagues=user_leagues,teams=user_teams,players=user_players)
+        
 
 @app.route("/league/<int:league_id>", methods=["GET"])
 def league_page(league_id):
@@ -61,7 +74,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         session['username'] = user.username
-        return redirect(f"/users/{user.username}/update")
+        return redirect(f"/feed")
     else:
         return render_template("register.html", form=form)
 
@@ -82,18 +95,18 @@ def login():
         return redirect(f"/users/{session['username']}")
     form = LoginForm()
     if form.validate_on_submit():
-        username = form.username.data
+        email = form.email.data
         password = form.password.data
-        user = User.authenticate(username, password)  # <User> or False
+        user = User.authenticate(email=email, password=password)  # <User> or False
         if user:
-            session['username'] = user.username
-            return redirect(f"/users/{user.username}")
+            session['username'] = user
+            return redirect("/feed")
         else:
-            form.username.errors = ["Invalid username/password."]
-            return render_template("users/login.html", form=form)
+            form.email.errors = ["Invalid username/password."]
+            return render_template("login.html", form=form)
     return render_template("login.html", form=form)
 
-@app.route("/logout")
+@app.route("/logout", methods=["GET","POST"])
 def logout():
     """Logout route."""
     session.pop("username")
