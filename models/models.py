@@ -12,6 +12,16 @@ def connect_db(app):
 
 season = 2021
 
+UserLeague = db.Table("users_leagues",
+                      db.Column('id', db.Integer, primary_key=True),
+                      db.Column("user_id", db.Integer, db.ForeignKey("users.id", ondelete = "cascade")),
+                      db.Column("league_id", db.Integer, db.ForeignKey("leagues.id", ondelete="cascade")))
+
+UserTeam = db.Table("users_teams",
+                      db.Column('id', db.Integer, primary_key=True),
+                      db.Column("user_id", db.Integer, db.ForeignKey("users.id", ondelete = "cascade")),
+                      db.Column("team_id", db.Integer, db.ForeignKey("teams.id", ondelete="cascade")))
+
 class League(db.Model):
     """
     Model Class for leagues.
@@ -87,7 +97,7 @@ class Team(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     league_id = db.Column(db.Integer, db.ForeignKey('leagues.id'))
-    players = db.relationship('Player', backref='team', lazy=True)
+    players = db.relationship('Player', backref='team')
     coach = db.Column(db.Text, unique=False, nullable=True)
     photo=db.Column(db.Text)
     rank = db.Column(db.Integer)
@@ -188,9 +198,7 @@ class Match(db.Model):
     
 
 class Player(db.Model):
-    """
-    
-    """
+    """ MANY Players to ONE Team """
     __tablename__='players'
     id=db.Column(db.Integer,primary_key=True)
     name=db.Column(db.Text)
@@ -241,25 +249,17 @@ class TeamPlayers(db.Model):
 ##################
     
 class User(db.Model):
-    """
-    User model should contain:
-    Data:
-    --> Favorite team
-    --> Username
-    --> Email
-    --> Password
-    --> Name
-    --> Bio
-    --> Picture
-    Methods:
-    --> Register
-    --> Authenticate
-    """
+    """ MANY to MANY relationship of Users to Leagues & Users to Teams """
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.Text, nullable=False, unique=True)
     password = db.Column(db.Text, nullable=False)
     email = db.Column(db.Text, nullable=False, unique=True)
+    leagues = db.relationship("League",        
+                              secondary=UserLeague, backref = db.backref("users"))
+    teams = db.relationship("Team", 
+                            secondary = UserTeam,
+                            backref = db.backref("users"))
     
     @classmethod
     def register(cls, username, password, email):
@@ -295,24 +295,10 @@ class User(db.Model):
         else:
             # if username is not in db or password does not match, deny
             return False    
-
-class LeagueFans(db.Model):
-    """ Mapping leagues with users to allow users to follow leagues """
-    __tablename__ = "league_fans"
-    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
-    league_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     
-class TeamFans(db.Model):
+class UsersTeams(db.Model):
     """ Mapping teams with users to establish fandom """
     __tablename__ = "team_fans"
     id = db.Column(db.Integer,primary_key=True,autoincrement=True)
     team_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    
-class PlayerFans(db.Model):
-    """ Mapping teams with users to establish fandom """
-    __tablename__ = "player_fans"
-    id = db.Column(db.Integer,primary_key=True,autoincrement=True)
-    player_id = db.Column(db.Integer, db.ForeignKey("teams.id"))
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
