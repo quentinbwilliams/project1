@@ -1,6 +1,12 @@
 from flask import Flask, render_template, redirect, session
 from forms import RegistrationForm, LoginForm
-from models.models import LeagueFans, TeamFans, PlayerFans, db, connect_db, User, League, Team, Match, Player
+from models.join_tables import db, connect_db, UserLeague, UserTeam
+from models.league import League, season
+from models.team import Team
+from models.player import Player
+from models.user import User
+from models.match import Match
+from models.api_client import api_football
 from werkzeug.exceptions import Unauthorized
 
 app = Flask(__name__)
@@ -22,12 +28,7 @@ def show_feed():
         return redirect("/login")
     else:
         username = session["username"]
-        user = User.query.filter_by(username=username).first()
-        user_leagues = LeagueFans.query.filter_by(user_id=user.id).all()
-        user_teams = TeamFans.query.filter_by(user_id=user.id).all()
-        user_players = PlayerFans.query.filter_by(user_id=user.id).all()
-        return render_template("feed.html", leagues=user_leagues,teams=user_teams,players=user_players)
-        
+        user = User.query.filter_by(username=username).first()        return render_template("feed.html", user=user)
 
 @app.route("/league/<int:league_id>", methods=["GET"])
 def league_page(league_id):

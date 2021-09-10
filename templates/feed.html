@@ -1,1 +1,10 @@
-{% extends 'base.html' %} {% block content %} {% endblock %}
+{% extends 'base.html' %} 
+{% block content %} 
+<h1>{{user.username}}</h1>
+	{% for league in user.leagues %}
+		<p>{{league}}</p>
+	{% endfor %}
+	{% for team in user.teams %}
+		<p>{{team}}</p>
+	{% endfor %}
+{% endblock %}
