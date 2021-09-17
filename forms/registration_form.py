@@ -11,11 +11,3 @@ class RegistrationForm(FlaskForm):
     ])
     confirm = PasswordField('Repeat Password')
     
-
-
-class LoginForm(FlaskForm):
-    email = StringField('Email', 
-        validators=[DataRequired(),
-        Email(),
-        Length(min=1, max=64)])
-    password = PasswordField('Password', validators=[DataRequired()])

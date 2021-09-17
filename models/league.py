@@ -1,6 +1,4 @@
-from models.api_client import api_football
-from flask_sqlalchemy import SQLAlchemy
-import requests
+from api.api_client import api_football
 from models.join_tables import db
 
 season = 2021

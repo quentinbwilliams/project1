@@ -1,4 +1,4 @@
-from models.api_client import api_football
+from api.api_client import api_football
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 import requests

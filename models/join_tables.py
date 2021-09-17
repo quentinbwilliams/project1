@@ -1,10 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
-def connect_db(app):
-    """Connect to database."""
-    db.app = app
-    db.init_app(app)
+from config import 
 
 UserLeague = db.Table("users_leagues",
                       db.Column('id', db.Integer, primary_key=True),

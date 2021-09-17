@@ -1,7 +1,5 @@
 from models.join_tables import db
-from models.league import season
-from models.team import Team
-from models.api_client import api_football
+from api.api_client import api_football
 
 
 class Player(db.Model):

@@ -1,5 +1,4 @@
 from models.join_tables import db
-from models.league import season
 
 class Match(db.Model):
     """
